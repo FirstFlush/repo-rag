@@ -3,6 +3,9 @@ import fnmatch
 from pathlib import Path
 from typing import List, Set
 from .ignore_patterns import IGNORE_PATTERNS
+from ..config.logging import get_logger
+
+logger = get_logger(__name__)
 
 class CodeScanner:
     def __init__(self):
@@ -64,15 +67,15 @@ class CodeScanner:
                         seen_files.add(absolute_path)
                         all_files.append(file_path)
             except ValueError as e:
-                print(f"Warning: {e}")
+                logger.warning(f"Error scanning directory {directory}: {e}")
         
         return sorted(all_files)
 
 if __name__ == "__main__":
     scanner = CodeScanner()
     files = scanner.scan_directory(".")
-    print(f"Found {len(files)} code files:")
+    logger.info(f"Found {len(files)} code files:")
     for file in files[:10]:  # Show first 10
-        print(f"  {file}")
+        logger.info(f"  {file}")
     if len(files) > 10:
-        print(f"  ... and {len(files) - 10} more")
+        logger.info(f"  ... and {len(files) - 10} more")

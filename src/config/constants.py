@@ -1,4 +1,5 @@
 
+DEBUG = False
 
 class ModelConstants:
     MODEL = "gpt-4"

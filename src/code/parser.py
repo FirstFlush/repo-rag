@@ -4,6 +4,9 @@ from pathlib import Path
 from typing import List, Optional
 from .dataclasses import CodeChunk
 from .enums import ChunkType
+from ..config.logging import get_logger
+
+logger = get_logger(__name__)
 
 class CodeParser:
     def __init__(self):
@@ -27,7 +30,7 @@ class CodeParser:
             else:
                 return []
         except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+            logger.error(f"Error parsing {file_path}: {e}", exc_info=True)
             return []
     
     def _parse_python(self, content: str, file_path: str) -> List[CodeChunk]:
@@ -56,7 +59,7 @@ class CodeParser:
                             if method_chunk:
                                 chunks.append(method_chunk)
         except SyntaxError as e:
-            print(f"Syntax error in {file_path}: {e}")
+            logger.error(f"Syntax error in {file_path}: {e}", exc_info=True)
         
         return chunks
     
@@ -204,6 +207,6 @@ if __name__ == "__main__":
     test_file = Path("code_parser.py")
     chunks = parser.parse_file(test_file)
     
-    print(f"Found {len(chunks)} code chunks in {test_file}:")
+    logger.info(f"Found {len(chunks)} code chunks in {test_file}:")
     for chunk in chunks:
-        print(f"  {chunk.chunk_type}: {chunk.name} ({chunk.start_line}-{chunk.end_line})")
+        logger.info(f"  {chunk.chunk_type}: {chunk.name} ({chunk.start_line}-{chunk.end_line})")

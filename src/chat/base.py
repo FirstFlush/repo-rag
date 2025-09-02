@@ -6,6 +6,9 @@ from .enums import ChatRole
 from .exc import ChatClientError
 from src.config.prompts import UserPrompt, SystemPrompt
 from src.config.constants import ModelConstants
+from src.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 class BaseChatClient(ABC):
     """Base class for all LLM API clients."""
@@ -29,8 +32,8 @@ class BaseChatClient(ABC):
         try:
             response = self._chat(chat_input)
         except Exception as e:
-            msg = f"{self.__class__.__name__} API call faied due to an unexpected error: {e}"
-            print(msg)
+            msg = f"{self.__class__.__name__} API call failed due to an unexpected error: {e}"
+            logger.error(msg, exc_info=True)
             raise ChatClientError(msg) from e
         else:
             return response

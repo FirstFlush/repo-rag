@@ -6,6 +6,9 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 from src.code.parser import CodeChunk
+from src.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class EmbeddingSystem:
@@ -46,7 +49,7 @@ class EmbeddingSystem:
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(exist_ok=True)
         
-        print(f"Loading sentence transformer model: {model_name}")
+        logger.info(f"Loading sentence transformer model: {model_name}")
         self.model = SentenceTransformer(model_name)
         
         # File paths
@@ -70,26 +73,26 @@ class EmbeddingSystem:
                     chunks_data = json.load(f)
                     self.chunks = [self._dict_to_chunk(chunk_dict) for chunk_dict in chunks_data]
                 self._update_chunk_hashes()
-                print(f"Loaded {len(self.chunks)} existing code chunks")
+                logger.info(f"Loaded {len(self.chunks)} existing code chunks")
             
             if self.embeddings_file.exists():
                 self.embeddings = np.load(self.embeddings_file)
                 if self.embeddings:
-                    print(f"Loaded embeddings with shape: {self.embeddings.shape}")
+                    logger.info(f"Loaded embeddings with shape: {self.embeddings.shape}")
                 else:
-                    print("No embeddings found!")
+                    logger.warning("No embeddings found!")
             
             if (self.index_file.exists() and 
                 self.embeddings is not None and 
                 len(self.chunks) == len(self.embeddings)):
                 self.index = faiss.read_index(str(self.index_file))
-                print("Loaded FAISS index")
+                logger.info("Loaded FAISS index")
             elif self.embeddings is not None:
-                print("Rebuilding FAISS index due to mismatch")
+                logger.info("Rebuilding FAISS index due to mismatch")
                 self._build_faiss_index()
                 
         except Exception as e:
-            print(f"Error loading existing data: {e}")
+            logger.error(f"Error loading existing data: {e}", exc_info=True)
             self._reset_data()
     
     def _reset_data(self):
@@ -165,17 +168,17 @@ class EmbeddingSystem:
                 self.chunk_hashes.add(chunk_hash)
         
         if not unique_chunks:
-            print("No new chunks to add (all were duplicates)")
+            logger.info("No new chunks to add (all were duplicates)")
             return 0
         
-        print(f"Adding {len(unique_chunks)} new code chunks...")
+        logger.info(f"Adding {len(unique_chunks)} new code chunks...")
         
         try:
             # Create text representations for embedding
             chunk_texts = [self._create_chunk_text(chunk) for chunk in unique_chunks]
             
             # Compute embeddings
-            print("Computing embeddings...")
+            logger.info("Computing embeddings...")
             new_embeddings = self.model.encode(
                 chunk_texts, 
                 show_progress_bar=True,
@@ -197,11 +200,11 @@ class EmbeddingSystem:
             # Save to disk
             self._save_data()
             
-            print(f"Added {len(unique_chunks)} chunks. Total: {len(self.chunks)}")
+            logger.info(f"Added {len(unique_chunks)} chunks. Total: {len(self.chunks)}")
             return len(unique_chunks)
             
         except Exception as e:
-            print(f"Error adding chunks: {e}")
+            logger.error(f"Error adding chunks: {e}", exc_info=True)
             # Rollback changes
             self.chunks = self.chunks[:-len(unique_chunks)]
             for chunk in unique_chunks:
@@ -233,10 +236,10 @@ class EmbeddingSystem:
             n_vectors = normalized_embeddings.shape[0]
             self.index.add(n_vectors, normalized_embeddings)
             
-            print(f"Built FAISS index with {self.index.ntotal} vectors")
+            logger.info(f"Built FAISS index with {self.index.ntotal} vectors")
             
         except Exception as e:
-            print(f"Error building FAISS index: {e}")
+            logger.error(f"Error building FAISS index: {e}", exc_info=True)
             self.index = None
             raise
     
@@ -256,10 +259,10 @@ class EmbeddingSystem:
             if self.index is not None:
                 faiss.write_index(self.index, str(self.index_file))
             
-            print("Data saved to disk")
+            logger.info("Data saved to disk")
             
         except Exception as e:
-            print(f"Error saving data: {e}")
+            logger.error(f"Error saving data: {e}", exc_info=True)
             raise
 
     def search(self, query: str, k: int = 10, score_threshold: float = 0.0) -> list[tuple[CodeChunk, float]]:
@@ -307,7 +310,7 @@ class EmbeddingSystem:
             return results
             
         except Exception as e:
-            print(f"Error during search: {e}")
+            logger.error(f"Error during search: {e}", exc_info=True)
             return []
     
     def get_stats(self) -> Dict[str, Any]:
@@ -354,10 +357,10 @@ class EmbeddingSystem:
                 if file_path.exists():
                     file_path.unlink()
 
-            print("All data cleared")
+            logger.info("All data cleared")
 
         except Exception as e:
-            print(f"Error clearing data: {e}")
+            logger.error(f"Error clearing data: {e}", exc_info=True)
 
     def remove_chunks_by_file(self, file_path: str) -> int:
         """Remove all chunks from a specific file.
@@ -395,7 +398,7 @@ class EmbeddingSystem:
             self._build_faiss_index()
             self._save_data()
             
-            print(f"Removed {removed_count} chunks from {file_path}")
+            logger.info(f"Removed {removed_count} chunks from {file_path}")
         
         return removed_count
 

@@ -5,6 +5,9 @@ from .enums import OpenAiModels
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion
 from typing import Literal, Type
+from src.config.logging import get_logger
+
+logger = get_logger(__name__)
 
 class OpenAiClient(BaseChatClient):
 
@@ -28,7 +31,7 @@ class OpenAiClient(BaseChatClient):
             )
         
         except Exception as e:
-            print(f"Error generating answer: {str(e)}")
+            logger.error(f"Error generating answer: {str(e)}", exc_info=True)
             raise
     
         else:
