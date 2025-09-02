@@ -1,0 +1,19 @@
+IGNORE_PATTERNS = {
+    'node_modules',
+    '.git',
+    '__pycache__',
+    '*.pyc',
+    '.venv',
+    'venv',
+    '.env',
+    'env',
+    'build',
+    'dist',
+    '.next',
+    '.nuxt',
+    'coverage',
+    '.pytest_cache',
+    '.mypy_cache',
+    '*.min.js',
+    '*.bundle.js'
+}
