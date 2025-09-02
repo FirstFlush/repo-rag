@@ -1,3 +1,7 @@
+.claude
+test_system.py
+prompts/
+
 # Environment and secrets
 .env
 .env.local
