@@ -30,7 +30,7 @@ def setup_logging():
     if root_logger.handlers:
         return
 
-    error_log_dir = Path("error log")
+    error_log_dir = Path("log")
     error_log_dir.mkdir(exist_ok=True)
     error_log_file = error_log_dir / "error.log"
 

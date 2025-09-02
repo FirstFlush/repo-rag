@@ -76,6 +76,7 @@ data/
 # Logs
 *.log
 logs/
+log/
 
 # Vector databases
 chroma_db/
